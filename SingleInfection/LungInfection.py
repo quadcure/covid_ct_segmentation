@@ -403,14 +403,20 @@ app = flask.Flask(__name__)
 model = None
 TEST_SIZE = 352
 
+transform = tv.transforms.Compose([
+    tv.transforms.Resize((TEST_SIZE, TEST_SIZE)),
+    tv.transforms.ToTensor(),
+    tv.transforms.Normalize([0.485, 0.456, 0.406],
+                             [0.229, 0.224, 0.225])])
 
-def load_model(pth_path, device):
+def load_model(device):
     # Initializing model
     global model
     model = Inf_Net()
 
     # loading weights
-    model_state = torch.hub.load_state_dict_from_url('https://github.com/saahiluppal/Inf-Net/releases/download/v1.0/Semi-Inf-Net-100.pth', map_location=device, progress=True)
+    model_state = torch.hub.load_state_dict_from_url('https://github.com/saahiluppal/Inf-Net/releases/download/v1.0/Semi-Inf-Net-100.pth', 
+                                    map_location=device, progress=True)
     model.load_state_dict(model_state)
 
     # loading model on specified device
@@ -420,11 +426,6 @@ def load_model(pth_path, device):
 
 
 def prepare_image(image):
-    transform = tv.transforms.Compose([
-        tv.transforms.Resize((TEST_SIZE, TEST_SIZE)),
-        tv.transforms.ToTensor(),
-        tv.transforms.Normalize([0.485, 0.456, 0.406],
-                                 [0.229, 0.224, 0.225])])
 
     if image.mode != "RGB":
         image = image.convert("RGB")
@@ -470,6 +471,5 @@ if __name__ == "__main__":
     print("Please wait until the server has fully started")
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    pth_path = "./Snapshots/LungInfection.pth"
-    load_model(pth_path, device)
+    load_model(device)
     app.run(host="0.0.0.0")
