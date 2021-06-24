@@ -7,6 +7,12 @@ import io
 import torchvision as tv
 
 from PIL import Image
+import time
+from google.cloud import storage
+from tempfile import NamedTemporaryFile
+import os
+import imageio
+import numpy as np
 
 
 # ---------------------------------------------------
@@ -403,14 +409,35 @@ app = flask.Flask(__name__)
 model = None
 TEST_SIZE = 352
 
+BUCKET_NAME = "nosensitivebucket"
+ORIGINAL_IMAGES = "images/original"
+INFECTION_IMAGES = "images/infection"
+
+bucket = None
+
 transform = tv.transforms.Compose([
     tv.transforms.Resize((TEST_SIZE, TEST_SIZE)),
     tv.transforms.ToTensor(),
     tv.transforms.Normalize([0.485, 0.456, 0.406],
                              [0.229, 0.224, 0.225])])
 
-def load_model(device):
+
+def prepare_name_based_on_time_seed():
+    name = str(time.time())
+    name = name.replace(".", "")
+    return name
+
+
+def load_bucket():
+    global bucket
+    client = storage.Client.from_service_account_json(json_credentials_path="deployment.json")
+    bucket = client.get_bucket(BUCKET_NAME)
+
+
+def load_model():
     # Initializing model
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+
     global model
     model = Inf_Net()
 
@@ -423,6 +450,36 @@ def load_model(device):
     # and disabling gradient flow.
     model.to(device)
     model.eval()
+
+
+def save_original_image_to_bucket(name, original_image):
+    path = os.path.join(ORIGINAL_IMAGES, name) + ".jpeg"
+
+    with NamedTemporaryFile() as temp:
+        iname = "".join([str(temp.name),".jpeg"])
+        imageio.imwrite(iname, original_image)
+
+        blob = bucket.blob(path)
+        blob.upload_from_filename(iname, content_type="image/jpeg")
+
+        private_url = os.path.join("https://storage.cloud.google.com", BUCKET_NAME, path)
+
+        return private_url
+
+
+def save_infection_image_to_bucket(name, infection_image):
+    path = os.path.join(INFECTION_IMAGES, name) + ".jpeg"
+
+    with NamedTemporaryFile() as temp:
+        iname = "".join([str(temp.name),".jpeg"])
+        imageio.imwrite(iname, infection_image)
+
+        blob = bucket.blob(path)
+        blob.upload_from_filename(iname, content_type="image/jpeg")
+
+        private_url = os.path.join("https://storage.cloud.google.com", BUCKET_NAME, path)
+
+        return private_url
 
 
 def prepare_image(image):
@@ -438,6 +495,8 @@ def prepare_image(image):
 @app.route("/api/ctlunginfection", methods=["POST"])
 def predict():
 
+    random_name = prepare_name_based_on_time_seed()
+
     device = "cuda" if torch.cuda.is_available() else "cpu"
     data = {"success": False, "device": device}
 
@@ -446,6 +505,10 @@ def predict():
             # read the image in PIL format
             image = flask.request.files["image"].read()
             image = Image.open(io.BytesIO(image))
+
+            # TODO: MultiProcessing Here
+            save_original_image_to_bucket(random_name, np.array(image))
+            # END here
 
             image = prepare_image(image)
 
@@ -461,14 +524,20 @@ def predict():
                 data["mask"] = res.tolist()
                 data["success"] = True
 
+        save_infection_image_to_bucket(random_name, res)
+
 
     return flask.jsonify(data)
 
 
+#load_bucket()
+#import numpy as np
+#save_infection_image_to_bucket(prepare_name_based_on_time_seed(), np.random.randn(32, 32))
 if __name__ == "__main__":
     print("Loading model and Flask starting server...")
     print("Please wait until the server has fully started")
 
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    load_model(device)
+    load_model()
+    load_bucket()
+
     app.run(host="0.0.0.0")
