@@ -439,7 +439,7 @@ def prepare_image(image):
 def predict():
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    data = {"success": False}
+    data = {"success": False, "device": device}
 
     if flask.request.method == "POST":
         if flask.request.files.get("image"):
@@ -457,7 +457,6 @@ def predict():
 # res = F.upsample(res, size=(ori_size[1],ori_size[0]), mode='bilinear', align_corners=False)
                 res = res.sigmoid().data.cpu().numpy().squeeze()
                 res = (res - res.min()) / (res.max() - res.min() + 1e-8)
-                print(type(res))
 
                 data["mask"] = res.tolist()
                 data["success"] = True

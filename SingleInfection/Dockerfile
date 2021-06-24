@@ -1,7 +1,7 @@
 FROM python:3.6.10
-RUN mkdir /app
-ADD ./* /app/
-WORKDIR /app
+RUN mkdir /ctlunginfection
+ADD ./* /ctlunginfection/
+WORKDIR /ctlunginfection
 
 RUN pip install -r requirements.txt
 
