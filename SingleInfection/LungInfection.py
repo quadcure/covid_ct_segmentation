@@ -9,10 +9,12 @@ import torchvision as tv
 from PIL import Image
 import time
 from google.cloud import storage
+from google.cloud import bigquery
 from tempfile import NamedTemporaryFile
 import os
 import imageio
 import numpy as np
+import datetime
 
 
 # ---------------------------------------------------
@@ -408,12 +410,14 @@ class Inf_Net(nn.Module):
 app = flask.Flask(__name__)
 model = None
 TEST_SIZE = 352
+FORMAT = "%d/%m/%Y %H:%M:%S UTC+0"
 
 BUCKET_NAME = "nosensitivebucket"
 ORIGINAL_IMAGES = "images/original"
 INFECTION_IMAGES = "images/infection"
 
 bucket = None
+bigquery_client = None
 
 transform = tv.transforms.Compose([
     tv.transforms.Resize((TEST_SIZE, TEST_SIZE)),
@@ -430,8 +434,12 @@ def prepare_name_based_on_time_seed():
 
 def load_bucket():
     global bucket
-    client = storage.Client.from_service_account_json(json_credentials_path="deployment.json")
-    bucket = client.get_bucket(BUCKET_NAME)
+    storage_client = storage.Client.from_service_account_json(json_credentials_path="deployment.json")
+    bucket = storage_client.get_bucket(BUCKET_NAME)
+
+def load_bigquery():
+    global bigquery_client
+    bigquery_client = bigquery.Client.from_service_account_json(json_credentials_path="deployment.json")
 
 
 def load_model():
@@ -498,6 +506,24 @@ def prepare_image(image):
     return image
 
 
+def prepare_timestamp():
+    now = datetime.datetime.utcnow()
+    return now.strftime(FORMAT)
+
+
+def insert_row_bigquery_table(UserName, CtScanUrl, MaskUrl):
+    query = (
+            'INSERT `deployment-317507.covid_ct.single_infection` (UserName, TimeStamp, CtScanUrl, MaskUrl) '
+            f'Values("{UserName}", "{prepare_timestamp()}", "{CtScanUrl}", "{MaskUrl}")'
+        )
+    
+    query_job = bigquery_client.query(query)
+    return query_job.result()
+
+
+
+# ------------------------------------------------------------
+# ------------------------------------------------------------
 @app.route("/api/ctlunginfection", methods=["POST"])
 def predict():
 
@@ -505,6 +531,12 @@ def predict():
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     data = {"success": False, "device": device, "infection_url": None}
+
+    # Fetch Variables from URL
+    UserName = flask.request.values.get("UserName")
+    if not UserName:
+        return flask.jsonify(data)
+    # End here
 
     if flask.request.method == "POST":
         if flask.request.files.get("image"):
@@ -531,6 +563,10 @@ def predict():
             infection_segmentation_url = save_infection_image_to_bucket(random_name, res)
             # End here
 
+            # TODO: Multiprocessing Here
+            insert_row_bigquery_table(UserName, original_image_url, infection_segmentation_url)
+            # End Here
+
             data["infection_url"] = infection_segmentation_url
             data["success"] = True
 
@@ -547,5 +583,6 @@ if __name__ == "__main__":
 
     load_model()
     load_bucket()
+    load_bigquery()
 
     app.run(host="0.0.0.0")
