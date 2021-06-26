@@ -1,4 +1,4 @@
-FROM python:3.6.10
+FROM python:3.7.10
 RUN mkdir /ctlunginfection
 ADD ./* /ctlunginfection/
 WORKDIR /ctlunginfection

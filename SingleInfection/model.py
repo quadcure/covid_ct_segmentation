@@ -3,6 +3,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 import math
 
+from configuration import Config
+config = Config()
 
 # ---------------------------------------------------
 # -----------------------------------------------------
@@ -164,7 +166,8 @@ def res2net50_v1b_26w_4s(pretrained=False, **kwargs):
     if pretrained:
         # Please replace it with your custom path
         device = "cuda" if torch.cuda.is_available() else "cpu"
-        model_state = torch.hub.load_state_dict_from_url('https://github.com/saahiluppal/Inf-Net/releases/download/v1.0/res2net50_v1b_26w_4s-3cf99910.pth', map_location=device, progress=True)
+        model_state = torch.hub.load_state_dict_from_url(config.res2net50_v1b_26w_4s,
+                                    map_location=device, progress=True)
         model.load_state_dict(model_state)
         # model_lung_infection.load_state_dict(model_zoo.load_url(model_urls['res2net50_v1b_26w_4s']))
     return model
