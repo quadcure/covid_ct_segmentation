@@ -1,6 +1,7 @@
 import torch
-import flask
+from fastapi import FastAPI, File, UploadFile
 from model import Inf_Net
+import io
 
 from PIL import Image
 from google.cloud import storage
@@ -25,7 +26,7 @@ config = Config()
 
 
 # Initializing the Flask API
-app = flask.Flask(__name__)
+app = FastAPI(title="Covid CT Segmentation")
 
 
 # Globals
@@ -38,6 +39,7 @@ bigquery_client = None
 # Initial Loading Services
 #-------------------------
 # Loading GC Buckets
+@app.on_event("startup")
 def load_bucket():
     global bucket
     storage_client = storage.Client.from_service_account_json(
@@ -46,6 +48,7 @@ def load_bucket():
     bucket = storage_client.get_bucket(config.bucket_name)
 
 # Loading GBigQuery
+@app.on_event("startup")
 def load_bigquery():
     global bigquery_client
     bigquery_client = bigquery.Client.from_service_account_json(
@@ -53,6 +56,7 @@ def load_bigquery():
                 )
 
 # Loading the Model
+@app.on_event("startup")
 def load_model():
     # Initializing model
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -120,8 +124,8 @@ def insert_row_bigquery_table(UserName, CtScanUrl, MaskUrl):
 # Routing Services
 # ----------------
 # ----------------
-@app.route("/api/ctlunginfection", methods=["POST"])
-def predict():
+@app.post("/api/ctlunginfection")
+async def predict_ctlunginfection(ctscan: UploadFile = File(...), UserName: str = None):
 
     random_name = prepare_name_based_on_time_seed()
 
@@ -129,53 +133,39 @@ def predict():
     data = {"success": False, "device": device, "infection_url": None}
 
     # Fetch Variables from URL
-    UserName = flask.request.values.get("UserName")
     if not UserName:
-        return flask.jsonify(data)
+        return data
     # End here
 
-    if flask.request.method == "POST":
-        if flask.request.files.get("image"):
-            # read the image in PIL format
-            image = flask.request.files["image"]
-            image = Image.open(image.stream)
+    # read the image in PIL format
+    content = await ctscan.read()
+    image = Image.open(io.BytesIO(content))
 
-            # TODO: MultiProcessing Here
-            original_image_url = save_original_image_to_bucket(random_name, np.array(image))
-            # END here
+    # TODO: MultiProcessing Here
+    original_image_url = save_original_image_to_bucket(random_name, np.array(image))
+    # END here
 
-            image = prepare_image(image)
+    image = prepare_image(image)
 
-            with torch.no_grad():
-                image = image.to(device)
+    with torch.no_grad():
+        image = image.to(device)
 
-                lateral_map_5, lateral_map_4, lateral_map_3, lateral_map_2, lateral_edge = model(image)
-                res = lateral_map_2
+        lateral_map_5, lateral_map_4, lateral_map_3, lateral_map_2, lateral_edge = model(image)
+        res = lateral_map_2
 # res = F.upsample(res, size=(ori_size[1],ori_size[0]), mode='bilinear', align_corners=False)
-                res = res.sigmoid().data.cpu().numpy().squeeze()
-                res = (res - res.min()) / (res.max() - res.min() + 1e-8)
+        res = res.sigmoid().data.cpu().numpy().squeeze()
+        res = (res - res.min()) / (res.max() - res.min() + 1e-8)
 
-            # TODO: Multiprocessing Here
-            infection_segmentation_url = save_infection_image_to_bucket(random_name, res)
-            # End here
+    # TODO: Multiprocessing Here
+    infection_segmentation_url = save_infection_image_to_bucket(random_name, res)
+    # End here
 
-            # TODO: Multiprocessing Here
-            insert_row_bigquery_table(UserName, original_image_url, infection_segmentation_url)
-            # End Here
+    # TODO: Multiprocessing Here
+    insert_row_bigquery_table(UserName, original_image_url, infection_segmentation_url)
+    # End Here
 
-            data["infection_url"] = infection_segmentation_url
-            data["success"] = True
-
-
-    return flask.jsonify(data)
+    data["infection_url"] = infection_segmentation_url
+    data["success"] = True
 
 
-if __name__ == "__main__":
-    print("Loading model and Flask starting server...")
-    print("Please wait until the server has fully started")
-
-    load_model()
-    load_bucket()
-    load_bigquery()
-
-    app.run(host="0.0.0.0")
+    return data
