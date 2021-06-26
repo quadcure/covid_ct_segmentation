@@ -462,9 +462,12 @@ def save_original_image_to_bucket(name, original_image):
         blob = bucket.blob(path)
         blob.upload_from_filename(iname, content_type="image/jpeg")
 
-        private_url = os.path.join("https://storage.cloud.google.com", BUCKET_NAME, path)
+        blob.make_public()
+        return blob.public_url
 
-        return private_url
+#        private_url = os.path.join("https://storage.cloud.google.com", BUCKET_NAME, path)
+#
+#        return private_url
 
 
 def save_infection_image_to_bucket(name, infection_image):
@@ -477,9 +480,12 @@ def save_infection_image_to_bucket(name, infection_image):
         blob = bucket.blob(path)
         blob.upload_from_filename(iname, content_type="image/jpeg")
 
-        private_url = os.path.join("https://storage.cloud.google.com", BUCKET_NAME, path)
+        blob.make_public()
+        return blob.public_url
 
-        return private_url
+#        private_url = os.path.join("https://storage.cloud.google.com", BUCKET_NAME, path)
+#
+#        return private_url
 
 
 def prepare_image(image):
@@ -503,11 +509,11 @@ def predict():
     if flask.request.method == "POST":
         if flask.request.files.get("image"):
             # read the image in PIL format
-            image = flask.request.files["image"].read()
-            image = Image.open(io.BytesIO(image))
+            image = flask.request.files["image"]
+            image = Image.open(image.stream)
 
             # TODO: MultiProcessing Here
-            save_original_image_to_bucket(random_name, np.array(image))
+            original_image_url = save_original_image_to_bucket(random_name, np.array(image))
             # END here
 
             image = prepare_image(image)
@@ -521,10 +527,12 @@ def predict():
                 res = res.sigmoid().data.cpu().numpy().squeeze()
                 res = (res - res.min()) / (res.max() - res.min() + 1e-8)
 
-                data["mask"] = res.tolist()
-                data["success"] = True
+            # TODO: Multiprocessing Here
+            infection_segmentation_url = save_infection_image_to_bucket(random_name, res)
+            # End here
 
-        save_infection_image_to_bucket(random_name, res)
+            data["infection_url"] = infection_segmentation_url
+            data["success"] = True
 
 
     return flask.jsonify(data)
