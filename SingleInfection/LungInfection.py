@@ -504,7 +504,7 @@ def predict():
     random_name = prepare_name_based_on_time_seed()
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    data = {"success": False, "device": device}
+    data = {"success": False, "device": device, "infection_url": None}
 
     if flask.request.method == "POST":
         if flask.request.files.get("image"):
