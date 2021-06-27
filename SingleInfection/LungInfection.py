@@ -110,10 +110,10 @@ def save_infection_image_to_bucket(name, infection_image):
 
 
 # Saving Data to BigQuery
-def insert_row_bigquery_table(UserName, CtScanUrl, MaskUrl):
+def insert_row_bigquery_table(UserName, CtScanUrl, InfectionUrl):
     query = (
-            f'INSERT `{config.project_name}.{config.database_name}.{config.table}` (UserName, TimeStamp, CtScanUrl, MaskUrl) '
-            f'Values("{UserName}", "{prepare_timestamp()}", "{CtScanUrl}", "{MaskUrl}")'
+            f'INSERT `{config.project_name}.{config.database_name}.{config.table}` (UserName, TimeStamp, CtScanUrl, InfectionUrl) '
+            f'Values("{UserName}", "{prepare_timestamp()}", "{CtScanUrl}", "{InfectionUrl}")'
         )
     
     query_job = bigquery_client.query(query)
