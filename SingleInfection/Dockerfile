@@ -1,11 +1,11 @@
 FROM python:3.7.10
 
-RUN mkdir /ctlunginfection
-ADD ./* /ctlunginfection/
-WORKDIR /ctlunginfection
+RUN mkdir /SingleInfection
+ADD ./* /SingleInfection/
+WORKDIR /SingleInfection
 
 RUN pip install -r requirements.txt
 
-EXPOSE 8000
+EXPOSE 8001
 
-CMD ["uvicorn", "LungInfection:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "SingleInfection:app", "--host", "0.0.0.0", "--port", "8001"]

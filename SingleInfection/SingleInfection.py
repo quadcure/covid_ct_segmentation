@@ -124,13 +124,13 @@ def insert_row_bigquery_table(UserName, CtScanUrl, InfectionUrl):
 # Routing Services
 # ----------------
 # ----------------
-@app.post("/api/ctlunginfection")
+@app.post("/api/ctsingleinfection")
 async def predict_ctlunginfection(ctscan: UploadFile = File(...), UserName: str = None):
 
     random_name = prepare_name_based_on_time_seed()
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    data = {"success": False, "device": device, "infection_url": None}
+    data = {"success": False, "device": device, "image_url": None, "infection_url": None}
 
     # Fetch Variables from URL
     if not UserName:
@@ -164,6 +164,7 @@ async def predict_ctlunginfection(ctscan: UploadFile = File(...), UserName: str 
     insert_row_bigquery_table(UserName, original_image_url, infection_segmentation_url)
     # End Here
 
+    data["image_url"] = original_image_url
     data["infection_url"] = infection_segmentation_url
     data["success"] = True
 
