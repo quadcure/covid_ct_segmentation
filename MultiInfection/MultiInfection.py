@@ -88,6 +88,7 @@ def save_ground_glass_to_bucket(name, ground_glass_image):
         blob.make_public()
         return blob.public_url
 
+
 # Saving Consolidation Segmentation to GC Bucket
 def save_consolidation_to_bucket(name, consolidation_image):
     path = os.path.join(config.consolidation_images_folder, name) + ".jpeg"
