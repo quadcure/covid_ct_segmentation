@@ -71,6 +71,7 @@ def load_model():
 # ------------------------
 
 
+
 # Functions using global services
 # -------------------------------
 # Saving GroundGlass Segmentation to GC Bucket
@@ -102,30 +103,44 @@ def save_consolidation_to_bucket(name, consolidation_image):
         return blob.public_url
 
 
+# Updating Rows in BigQuery
+# Adding ground Glass Opacitiy Url
+# Along with Consolidation Url
+def update_row_bigquery_table(PsuedoUrl, GroundGlassUrl, ConsolidationUrl):
+    query = (
+            f'UPDATE `{config.project_name}.{config.database_name}.{config.table}` '
+            f'SET GroundGlassUrl = "{GroundGlassUrl}", '
+            f'ConsolidationUrl = "{ConsolidationUrl}" '
+            f'WHERE InfectionUrl = "{PsuedoUrl}"'
+        )
+
+    query_job = bigquery_client.query(query)
+    return query_job.result()
+# ---------------------------------
+
+
 
 # Routing Services
 # ----------------
 # ----------------
-@app.post("/api/ctlungmulticlass")
-async def inference(ctscan: UploadFile = File(...), PsuedoUrl: str = None):
+@app.post("/api/ctmultiinfection")
+async def inference(ImageUrl: str = None, PsuedoUrl: str = None):
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     data = {"success": False, "device": device, "GroundGlass": None, "Consolidation": None}
 
     # Fetch Variables from URL
-    if not PsuedoUrl:
+    if not PsuedoUrl or not ImageUrl:
         return data
     # End here
-
-    # read the image in PIL format
-    content = await ctscan.read()
-    image = Image.open(io.BytesIO(content))
 
     # Fetching naming convention from PsuedoUrl
     random_name = os.path.basename(PsuedoUrl)
     random_name = os.path.splitext(random_name)[0]
 
-    image, psuedo_image = prepare_image(image, PsuedoUrl)
+    # Reading Original and Psuedo image
+    # using their URL's provided by /api/ctsingleinfection
+    image, psuedo_image = prepare_image(ImageUrl, PsuedoUrl)
 
     with torch.no_grad():
         image = image.to(device)
@@ -149,19 +164,11 @@ async def inference(ctscan: UploadFile = File(...), PsuedoUrl: str = None):
         # TODO: Multiprocessing here
         ground_glass_url = save_ground_glass_to_bucket(random_name, class_one)
         consolidation_url = save_consolidation_to_bucket(random_name, class_two)
+
+        update_row_bigquery_table(PsuedoUrl, ground_glass_url, consolidation_url)
         
         data["GroundGlass"] = ground_glass_url
         data["Consolidation"] = consolidation_url
         # End here
 
         return data
-
-
-
-
-#if __name__ == "__main__":
-#    inference(num_classes=3,
-#              input_channels=6,
-#              snapshot_dir='./Snapshots/save_weights/Semi-Inf-Net_UNet/unet_model_200.pkl',
-#              save_path='./Results/Multi-class lung infection segmentation/class_12/'
-#              )

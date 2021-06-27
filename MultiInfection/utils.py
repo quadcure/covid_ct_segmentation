@@ -17,12 +17,14 @@ transform = tv.transforms.Compose([
 
 
 
-def prepare_image(image, psuedo_url):
+def prepare_image(image_url, psuedo_url):
 
     psuedo_image = Image.open(requests.get(psuedo_url, stream=True).raw)
 
     if psuedo_image.mode != "RGB":
         psuedo_image = psuedo_image.convert("RGB")
+
+    image = Image.open(requests.get(image_url, stream=True).raw)
 
     if image.mode != "RGB":
         image = image.convert("RGB")
