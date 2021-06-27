@@ -170,6 +170,7 @@ async def inference(ImageUrl: str = None, PsuedoUrl: str = None):
         
         data["GroundGlass"] = ground_glass_url
         data["Consolidation"] = consolidation_url
+        data["success"] = True
         # End here
 
         return data
