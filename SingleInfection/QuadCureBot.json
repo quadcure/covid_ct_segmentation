@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "trusty-vim-316404",
+  "private_key_id": "7b73cca471a29fa34433d5bcf022c6c86c73e099",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCrauryZhilgvR6\ntNSBGNqAgb3CV/CHgCrTlmQYwJcd0jmKu2bb0tFlec+QuWaPc6xjvOGxOh1DkICk\nGrna8cNcVO0QzetQQ9ToYXI+6ZyFcoi2ZgScKSJWYp6htaSNf7KHg1ABHIFoX7Ey\nja0TaYL4F/sGEK+UgJrSXuHDq502vmN2HxTht6WcaN9V7K5bhg9OGgZyx0Xxn5Vh\n4lHGrKuIKFiYL0AMe52VaJmo1UVA1uZa2XtgfKWuthcB1mR9yUb7ETOwV+WYF0cj\ndRw/XNbYBBBlSSbitUAX2QENsMietigp9MBs0f4DlPXZ8REOsp+utckTQY5E1prg\nfmmNSVsfAgMBAAECggEADwl5BLyKCvLa6Wy1e4GnoUBAWi0Gr4xBtX/q1fUHDJml\nbJMV6dCrh8BQwfxRj+HwzGsETVywtn2Vm0+w4BD3N0FH7oJx0v+wTJZHxFcP4PD0\nJzP50Y0WMwfBrKPXhIYgLh0Jxp8uhu5mB+4/sYU+9O59mcGa9Wb2rd+e5GBIkUWr\nhTi2LhtouA7haznGGBvqJtZSgF40fkQHApG7f59cRDPj2aYvqHjHnJZ7sAJuWnrH\nGYUJyMINWYChGDd7BZsnw8m1xmhQMH9ldBZWnGxuGat8Oi1bEpesCrQeY2dbeQfo\nF2PRPoV1Yuf2BjnubufU6fZSNL1i8+9kw40L85fygQKBgQDXr4aFg4pY3Gq+5Hrb\nICdBY8yps/GVkZ3oiTTEOo9UGn+AwgOmkAz9FBXgQ5MaMJe2aDnOkg8RmihEhXY2\nBoPGXlgP68BW3QP/Fv/xJR93KRUuQgu7ORt6bodywmsspLc/+B6j17HCVez/GA7I\nlGMijFQrdzQ2irlkTEUnxCpK3wKBgQDLdS+Kp+Q8EzxyX2bP5b1flQ05iVLHSWgr\ndjCwcVBr+dTV/KRk9N1poOPsLobFoRhrvNNzBCNMaFwC/D0gTTpPGRKp10pcgoqT\n/pLiCkvd9ulG96oET9cxzom/edEJXkJdHasoMIwLCTF5Wp88o+OlfLieaIy17+Pq\nytNDF883wQKBgCwSCmuXgBo+F3Wf29aQUFUVHkmCohdMpLZR6r05tfWaYHkfq31K\nK80+YGXtiM4uJaG41C74Oyn+lMHDf270j9JljpraMffNuzZRLcTJMA+6DkDgb+M2\nfP3cPcLeJOX/Vg41FZWmygSKaB2LfeHQKB10DPLAraODXvQ2fV7tvzKDAoGBAMJa\n/oBY46kTwyGKyv78ewvsqcZ1zRK8p/skm1xh0q5i6RNFlZEvbLczz6bVxz7RJi/9\nIIz1vfaGlqbvaEEMJRBcZjzCgbGfrluzy4KMzW6LKMr3WX1m+64DnAjCiJKHbaPf\n7JmmzpDYRl+j1wupj5SNcRs5ynkeYT3wZSHpg7TBAoGBAIiK4Oco8ERHtsl5xYQU\nXb2KGLNHQvR/DAMRRkRSHqDqySpihO+Dji9sqYGWzO+NWlicr7enaQIgzCqKdYXi\n/Cpi1JOArkg1U/UPZMF1bBIhRDPlMUe/y135U00hM8Ap+uM7NfM+CMGSDaScW4fG\nDoDt3HmkJ7G302URtqjkKLR+\n-----END PRIVATE KEY-----\n",
+  "client_email": "quadcurebot@trusty-vim-316404.iam.gserviceaccount.com",
+  "client_id": "104774742014573214385",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/quadcurebot%40trusty-vim-316404.iam.gserviceaccount.com"
+}

@@ -17,6 +17,7 @@ import numpy as np
 from utils import prepare_image
 from utils import prepare_name_based_on_time_seed
 from utils import prepare_timestamp
+from utils import assert_DOB
 
 
 # Custom Configuration
@@ -110,10 +111,10 @@ def save_infection_image_to_bucket(name, infection_image):
 
 
 # Saving Data to BigQuery
-def insert_row_bigquery_table(UserName, CtScanUrl, InfectionUrl):
+def insert_row_bigquery_table(UserName, DOB, CtScanUrl, InfectionUrl):
     query = (
-            f'INSERT `{config.project_name}.{config.database_name}.{config.table}` (UserName, TimeStamp, CtScanUrl, InfectionUrl) '
-            f'Values("{UserName}", "{prepare_timestamp()}", "{CtScanUrl}", "{InfectionUrl}")'
+            f'INSERT `{config.project_name}.{config.database_name}.{config.table}` (UserName, TimeStamp, DOB, CtScanUrl, InfectionUrl) '
+            f'Values("{UserName}", "{prepare_timestamp()}", "{DOB}", "{CtScanUrl}", "{InfectionUrl}")'
         )
     
     query_job = bigquery_client.query(query)
@@ -125,7 +126,7 @@ def insert_row_bigquery_table(UserName, CtScanUrl, InfectionUrl):
 # ----------------
 # ----------------
 @app.post("/api/ctsingleinfection")
-async def predict_ctlunginfection(ctscan: UploadFile = File(...), UserName: str = None):
+async def predict_ctlunginfection(ctscan: UploadFile = File(...), UserName: str = None, DOB: str = None):
 
     random_name = prepare_name_based_on_time_seed()
 
@@ -133,7 +134,10 @@ async def predict_ctlunginfection(ctscan: UploadFile = File(...), UserName: str 
     data = {"success": False, "device": device, "image_url": None, "infection_url": None}
 
     # Fetch Variables from URL
-    if not UserName:
+    if not UserName or not DOB:
+        return data
+    s, DOB = assert_DOB(DOB)
+    if not s:
         return data
     # End here
 
@@ -161,7 +165,7 @@ async def predict_ctlunginfection(ctscan: UploadFile = File(...), UserName: str 
     # End here
 
     # TODO: Multiprocessing Here
-    insert_row_bigquery_table(UserName, original_image_url, infection_segmentation_url)
+    insert_row_bigquery_table(UserName, DOB, original_image_url, infection_segmentation_url)
     # End Here
 
     data["image_url"] = original_image_url

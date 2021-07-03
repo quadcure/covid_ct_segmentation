@@ -43,4 +43,20 @@ def prepare_timestamp():
     now = datetime.datetime.utcnow()
     return now.strftime(FORMAT)
 
+
+def assert_DOB(DOB):
+    if "." in DOB and "/" in DOB:
+        return False, None
+    if "." in DOB:
+        day, month, year = DOB.split(".")
+    else:
+        day, month, year = DOB.split("/")
+
+    day = day.zfill(2)
+    month = month.zfill(2)
+    if len(year) != 4:
+        return False, None
+
+    return True, f"{day}/{month}/{year}"
+
 # --------------------------------
