@@ -1,5 +1,6 @@
 import torch
 from fastapi import FastAPI, File, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from model import Inf_Net_UNet
 import io
 
@@ -26,6 +27,19 @@ config = Config()
 
 # Initializing the Flask API
 app = FastAPI(title="Covid CT Segmentation")
+
+origins = ["*"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["POST", "GET"],
+    allow_headers=["*"],
+    max_age=3600,
+)
+
+
 
 
 # Globals
